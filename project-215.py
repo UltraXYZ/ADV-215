@@ -20,11 +20,13 @@ actor_list = []
 
 
 def generate_lidar_blueprint(blueprint_library):
-    lidar_blueprint = blueprint_library.find('sensor.lidar.ray_cast_semantic')
-    lidar_blueprint.set_attribute('channels', str(64))
-    lidar_blueprint.set_attribute('points_per_second', str(56000*10))
+    lidar_blueprint=blueprint_library.find('sensor.lidar.ray_cast_semantic')
+    lidar_blueprint.set_attribute('channels', str(60))
+    lidar_blueprint.set_attribute('points_per_second', str(500000))
+    lidar_blueprint.set_attribute('rotation_frequency', str(40))
+    lidar_blueprint.set_attribute('range', str(100))
     lidar_blueprint.set_attribute('upper_fov', str(15))
-    lidar_blueprint.set_attribute('lower_fov', str(-30))
+    lidar_blueprint.set_attribute('lower_fov', str(-25))
     return lidar_blueprint
 
 
@@ -33,12 +35,10 @@ def semantic_lidar_data(point_cloud, lidar_point_cloud_buffer):
     matrix_representational_data = np.frombuffer(point_cloud.raw_data, dtype=np.dtype([
         ('x', np.float32), ('y', np.float32), ('z', np.float32),
         ('CosAngle', np.float32), ('ObjIdx', np.uint32), ('ObjTag', np.uint32)]))
-    lidar_points = np.array(
-        [matrix_representational_data['x'], -matrix_representational_data['y'], matrix_representational_data['z']]).T
-    labels = np.array(matrix_representational_data['ObjTag'], dtype=np.float32)
-    lidar_point_cloud_buffer['pts'] = lidar_points
-    lidar_point_cloud_buffer['intensity'] = labels
-
+    lidar_points = np.array([matrix_representational_data['x'], -matrix_representational_data['y'], matrix_representational_data['z']]).T
+    labels=np.array(matrix_representational_data['ObjTag'], dtype=np.float32)
+    lidar_point_cloud_buffer['pts']=lidar_points
+    lidar_point_cloud_buffer['intensity']=labels
 
 def carlaThreadingLoop(world):
     frame = 0
@@ -67,12 +67,12 @@ try:
     actor_list.append(dropped_vehicle)
 
     lidar_sensor = generate_lidar_blueprint(get_blueprint_of_world)
-    sensor_lidar_spawn_point = carla.Transform(#write code here)
+    sensor_lidar_spawn_point = carla.Transform(carla.Location(x=-0.5, z=1.8))
     sensor = world.spawn_actor(lidar_sensor, sensor_lidar_spawn_point, attach_to=dropped_vehicle)
 
     lidar_figure = mlab.figure(size=(960, 540), bgcolor=(0.05, 0.05, 0.05))
-    visualise_lidar_using_mayavi = mlab.points3d(1#write code here, mode='point', #write code here, figure=lidar_figure)
-    mlab.view(#write code here)
+    visualise_lidar_using_mayavi = mlab.points3d(0, 0, 0, 0, mode='point', figure=lidar_figure)
+    mlab.view(distance=25)
     lidar_point_cloud_buffer = {'pts': np.zeros((1, 3)), 'intensity': np.zeros(1)}
 
 
